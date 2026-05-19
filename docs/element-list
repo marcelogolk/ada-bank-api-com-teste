@@ -1,9 +1,0 @@
-br.com.ada.quarkus.exception
-br.com.ada.quarkus.model
-br.com.ada.quarkus.resource
-br.com.ada.quarkus.resource.account
-br.com.ada.quarkus.resource.auth
-br.com.ada.quarkus.resource.customer
-br.com.ada.quarkus.resource.transaction
-br.com.ada.quarkus.service
-br.com.ada.quarkus.util
