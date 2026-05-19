@@ -4,18 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
-/**
- * Representa os dados necessários para o cadastro de um cliente.
- *
- * <p>Utilizado no endpoint de criação (signup). Todos os campos são obrigatórios
- * e validados antes de serem enviados para a camada de serviço.</p>
- *
- * @param name nome completo do cliente.
- * @param cpf CPF do cliente contendo exatamente 11 dígitos numéricos (sem máscara).
- * @param email email do cliente, deve estar em formato válido.
- * @param password senha de acesso do cliente em texto puro.
- */
 public record CreateCustomerRequest(
 
         @NotBlank(message = "O nome do cliente é obrigatório")

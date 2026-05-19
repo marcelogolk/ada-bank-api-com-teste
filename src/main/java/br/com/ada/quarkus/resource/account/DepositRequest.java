@@ -5,11 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-/**
- * Representa os dados necessários para realizar um depósito.
- *
- * @param amount valor a ser depositado.
- */
 public record DepositRequest(
 
         @NotNull(message = "O valor do depósito é obrigatório")

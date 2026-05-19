@@ -1,20 +1,34 @@
+
 package unitario;
 
 import br.com.ada.quarkus.model.*;
 import br.com.ada.quarkus.service.*;
+import org.hibernate.query.NativeQuery; // Adicione este import
+import jakarta.persistence.Query; // Mantenha este import se ainda for usado em outros lugares
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.*;
+import jakarta.persistence.EntityManager;
 import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import static groovy.xml.Entity.gt;
+import static groovy.xml.Entity.lt;
+import static io.quarkus.hibernate.orm.panache.PanacheEntityBase.findById;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -35,6 +49,10 @@ class AccountServiceTest {
 
     @InjectMock
     AccountValidator accountValidator;
+
+    @InjectMock
+    EntityManager entityManager;
+
 
     private Account account;
     private Account destinationAccount;
@@ -87,7 +105,7 @@ class AccountServiceTest {
     void findById_deveLancarNotFoundException_quandoContaNaoExiste() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(99L)).thenReturn(null);
+        when(findById(99L)).thenReturn(null);
 
         // ACT + ASSERT
         assertThrows(NotFoundException.class,
@@ -102,7 +120,7 @@ class AccountServiceTest {
     void deposit_deveRetornarTransacao_quandoDadosValidos() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
+        when(findById(1L)).thenReturn(account);
         doNothing().when(accountValidator).validateAmount(any());
         doNothing().when(accountValidator).validateElectronicAccountForDeposit(any());
         when(transactionService.createDeposit(1L, BigDecimal.valueOf(200)))
@@ -122,7 +140,7 @@ class AccountServiceTest {
     void deposit_deveLancarNotFoundException_quandoContaNaoExiste() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(99L)).thenReturn(null);
+        when(findById(99L)).thenReturn(null);
 
         // ACT + ASSERT
         assertThrows(NotFoundException.class,
@@ -135,7 +153,7 @@ class AccountServiceTest {
     void deposit_deveLancarExcecao_quandoValorInvalido() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
+        when(findById(1L)).thenReturn(account);
         doThrow(new IllegalArgumentException("Valor inválido"))
                 .when(accountValidator).validateAmount(BigDecimal.valueOf(-50));
 
@@ -150,7 +168,7 @@ class AccountServiceTest {
     void deposit_deveLancarExcecao_quandoContaNaoPermiteDeposito() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
+        when(findById(1L)).thenReturn(account);
         doNothing().when(accountValidator).validateAmount(any());
         doThrow(new IllegalArgumentException("Conta não permite depósito"))
                 .when(accountValidator).validateElectronicAccountForDeposit(account);
@@ -194,7 +212,7 @@ class AccountServiceTest {
     void withdraw_deveLancarNotFoundException_quandoContaNaoExiste() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(99L)).thenReturn(null);
+        when(findById(99L)).thenReturn(null);
 
         // ACT + ASSERT
         assertThrows(NotFoundException.class,
@@ -207,7 +225,7 @@ class AccountServiceTest {
     void withdraw_deveLancarExcecao_quandoSaldoInsuficiente() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
+        when(findById(1L)).thenReturn(account);
         when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
         doNothing().when(accountValidator).checkAccountOwnership(any(), any());
         doNothing().when(accountValidator).validateAmount(any());
@@ -226,7 +244,7 @@ class AccountServiceTest {
     void withdraw_deveLancarExcecao_quandoContaNaoPertenceAoUsuario() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
+        when(findById(1L)).thenReturn(account);
         when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
         doThrow(new jakarta.ws.rs.ForbiddenException("Acesso negado"))
                 .when(accountValidator).checkAccountOwnership(account, loggedUser);
@@ -242,38 +260,37 @@ class AccountServiceTest {
     // transfer
     // ════════════════════════════════════════════════════════════════════════
 
-//    @Test
-//    void transfer_deveRetornarTransacao_quandoDadosValidos() {
-//        // ARRANGE
-//        Account destination = new Account();
-//        destination.getId() = 2L;
-//
-//        PanacheMock.mock(Account.class);
-//        when(Account.findById(1L)).thenReturn(account);
-//        when(Account.findById(2L)).thenReturn(destination);
-//        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
-//        doNothing().when(accountValidator).checkAccountOwnership(any(), any());
-//        doNothing().when(accountValidator).validateAmount(any());
-//        doNothing().when(accountValidator).validateDifferentAccounts(any(), any());
-//        doNothing().when(accountValidator).validateSufficientBalance(any(), any());
-//        when(transactionService.createTransfer(1L, 2L, BigDecimal.valueOf(500)))
-//                .thenReturn(transaction);
-//
-//        // ACT
-//        Transaction result = accountService.transfer(1L, 2L, BigDecimal.valueOf(500));
-//
-//        // ASSERT
-//        assertNotNull(result);
-//        verify(accountValidator, times(1)).validateDifferentAccounts(1L, 2L);
-//        verify(accountValidator, times(1)).validateSufficientBalance(account, BigDecimal.valueOf(500));
-//        verify(transactionService, times(1)).createTransfer(1L, 2L, BigDecimal.valueOf(500));
-//    }
+    @Test
+    void transfer_deveRetornarTransacao_quandoDadosValidos() {
+        when(Account.<Account>findById(1L)).thenReturn(account); // Usando o account do @BeforeEach
+        when(Account.<Account>findById(2L)).thenReturn(destinationAccount); // Usando o destinationAccount do @BeforeEach
+        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
+        doNothing().when(accountValidator).checkAccountOwnership(any(), any());
+        doNothing().when(accountValidator).validateAmount(any());
+        doNothing().when(accountValidator).validateDifferentAccounts(any(), any());
+        doNothing().when(accountValidator).validateSufficientBalance(any(), any());
+        when(transactionService.createTransfer(1L, 2L, BigDecimal.valueOf(500)))
+                .thenReturn(transaction);
+
+        // ACT
+        Transaction result = accountService.transfer(1L, 2L, BigDecimal.valueOf(500));
+
+        // ASSERT
+        assertNotNull(result);
+        verify(accountValidator, times(1)).validateDifferentAccounts(1L, 2L);
+        verify(accountValidator, times(1)).validateSufficientBalance(account, BigDecimal.valueOf(500));
+        verify(transactionService, times(1)).createTransfer(1L, 2L, BigDecimal.valueOf(500));
+        // Adicionei as verificações para as chamadas do PanacheMock
+        PanacheMock.verify(Account.class, times(1)).findById(1L);
+        PanacheMock.verify(Account.class, times(1)).findById(2L);
+    }
+
 
     @Test
     void transfer_deveLancarNotFoundException_quandoContaOrigemNaoExiste() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(99L)).thenReturn(null);
+        when(findById(99L)).thenReturn(null);
 
         // ACT + ASSERT
         assertThrows(NotFoundException.class,
@@ -286,8 +303,8 @@ class AccountServiceTest {
     void transfer_deveLancarNotFoundException_quandoContaDestinoNaoExiste() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
-        when(Account.findById(2L)).thenReturn(null);
+        when(findById(1L)).thenReturn(account);
+        when(findById(2L)).thenReturn(null);
 
         // ACT + ASSERT
         assertThrows(NotFoundException.class,
@@ -300,7 +317,7 @@ class AccountServiceTest {
     void transfer_deveLancarExcecao_quandoContasIguais() {
         // ARRANGE
         PanacheMock.mock(Account.class);
-        when(Account.findById(1L)).thenReturn(account);
+        when(findById(1L)).thenReturn(account);
         when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
         doNothing().when(accountValidator).checkAccountOwnership(any(), any());
         doNothing().when(accountValidator).validateAmount(any());
@@ -314,44 +331,174 @@ class AccountServiceTest {
         verify(transactionService, never()).createTransfer(any(), any(), any());
     }
 
-//    @Test
-//    void transfer_deveLancarExcecao_quandoSaldoInsuficiente() {
-//        // ARRANGE
-//        Account destination = new Account();
-//        destination.id = 2L;
-//
-//        PanacheMock.mock(Account.class);
-//        when(Account.findById(1L)).thenReturn(account);
-//        when(Account.findById(2L)).thenReturn(destination);
-//        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
-//        doNothing().when(accountValidator).checkAccountOwnership(any(), any());
-//        doNothing().when(accountValidator).validateAmount(any());
-//        doNothing().when(accountValidator).validateDifferentAccounts(any(), any());
-//        doThrow(new IllegalArgumentException("Saldo insuficiente"))
-//                .when(accountValidator).validateSufficientBalance(account, BigDecimal.valueOf(9999));
-//
-//        // ACT + ASSERT
-//        assertThrows(IllegalArgumentException.class,
-//                () -> accountService.transfer(1L, 2L, BigDecimal.valueOf(9999)));
-//
-//        verify(transactionService, never()).createTransfer(any(), any(), any());
-//    }
+    @Test
+    void transfer_deveLancarExcecao_quandoSaldoInsuficiente() {
+        // ARRANGE
+        Account destination = new Account();
+        when(findById(1L)).thenReturn(account);
+        when(findById(2L)).thenReturn(destination);
+        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
+        doNothing().when(accountValidator).checkAccountOwnership(any(), any());
+        doNothing().when(accountValidator).validateAmount(any());
+        doNothing().when(accountValidator).validateDifferentAccounts(any(), any());
+        doThrow(new IllegalArgumentException("Saldo insuficiente"))
+                .when(accountValidator).validateSufficientBalance(account, BigDecimal.valueOf(9999));
+
+        // ACT + ASSERT
+        assertThrows(IllegalArgumentException.class,
+                () -> accountService.transfer(1L, 2L, BigDecimal.valueOf(9999)));
+
+        verify(transactionService, never()).createTransfer(any(), any(), any());
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     // loggedUser
     // ════════════════════════════════════════════════════════════════════════
 
+    @Test
+    void loggedUser_deveRetornarUsuarioLogado() {
+        // ARRANGE
+        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
+
+        // ACT
+        LoggedUser result = accountService.loggedUser();
+
+        // ASSERT
+        assertNotNull(result);
+        assertEquals(loggedUser.id(), result.id());
+        verify(currentUserService, times(1)).getLoggedUser();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // list
+    // ════════════════════════════════════════════════════════════════════════
 //    @Test
-//    void loggedUser_deveRetornarUsuarioLogado() {
+//    void list_deveRetornarPageResultDeContas_quandoCustomerIdNulo() {
 //        // ARRANGE
-//        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
+//        // PanacheMock.mock(Account.class); // Já está no @BeforeEach, garantindo que Account é mockável
+//
+//        Account account1 = new Account(1L, "0000000011", AccountType.CORRENTE, 10L);
+//        Account account2 = new Account(2L, "0000000022", AccountType.POUPANCA, 10L);
+//        List<Account> accounts = List.of(account1, account2);
+//
+//        // 1. Crie o mock do PanacheQuery<Account>
+//        PanacheQuery<Account> panacheQueryMock = Mockito.mock(PanacheQuery.class);
+//
+//        // 2. Configure o comportamento do panacheQueryMock
+//        when(panacheQueryMock.page(Page.of(0, 10))).thenReturn(panacheQueryMock);
+//        when(panacheQueryMock.list()).thenReturn(accounts);
+//        when(panacheQueryMock.count()).thenReturn((long) accounts.size());
+//
+//        // 3. Configure o método estático Account.findAll para retornar o panacheQueryMock
+//        // A chave aqui é garantir que o PanacheMock esteja interceptando corretamente.
+//        // Se o problema for que o 'when' não está sendo aplicado,
+//        // pode ser necessário garantir que o PanacheMock esteja "pronto" para isso.
+//        // A linha abaixo é a forma padrão e deve funcionar.
+//        when(Account.<Account>findAll(Sort.by("id"))).thenReturn(panacheQueryMock);
+//
 //
 //        // ACT
-//        LoggedUser result = accountService.loggedUser();
+//        PageResult<Account> result = accountService.list(null, 0, 10);
 //
 //        // ASSERT
 //        assertNotNull(result);
-//        assertEquals(loggedUser.getCustomerId(), result.getCustomerId());
-//        verify(currentUserService, times(1)).getLoggedUser();
+//        assertEquals(2, result.totalElements());
+//        assertEquals(2, result.content().size());
+//        assertEquals(0, result.page());
+//        assertEquals(10, result.size());
+//        assertEquals(account1, result.content().get(0));
+//        assertEquals(account2, result.content().get(1));
+//
+//        PanacheMock.verify(Account.class, times(1)).findAll(Sort.by("id"));
+//        PanacheMock.verify(Account.class, never()).find(eq("customerId"), (Object) any());
 //    }
+
+//    @Test
+//    void create_deveCriarConta_quandoClienteExiste() {
+//        // ARRANGE
+//        Account novaConta = new Account(null, null, AccountType.CORRENTE, 10L);
+//        Customer customer = new Customer();
+//        when(customerService.findById(10L)).thenReturn(customer);
+//
+//        when(accountValidator.calculateCheckDigit(anyString())).thenReturn(7);
+//
+//        // MOCKANDO O ENTITYMANAGER
+//        // Mock para o nextval
+//        NativeQuery mockQueryNextVal = Mockito.mock(NativeQuery.class); // <-- Mude aqui para NativeQuery
+//        when(entityManager.createNativeQuery("select nextval('account_id_seq')")).thenReturn(mockQueryNextVal);
+//        when(mockQueryNextVal.getSingleResult()).thenReturn(1L); // Retorna o ID gerado
+//        // Mock para o INSERT
+//        Query mockQueryInsert = Mockito.mock(Query.class); // Garanta que 'Query' aqui é jakarta.persistence.Query
+//
+//        // Mock para o INSERT
+//        NativeQuery mockQueryInsert = Mockito.mock(NativeQuery.class); // <-- Mude aqui para NativeQuery
+//        when(entityManager.createNativeQuery(anyString())).thenReturn(mockQueryInsert); // Mocka qualquer createNativeQuery
+//        when(mockQueryInsert.setParameter(anyString(), any())).thenReturn(mockQueryInsert); // Permite encadeamento
+//        when(mockQueryInsert.executeUpdate()).thenReturn(1); // Retorna 1 para indicar sucesso
+//
+//        // Para o getRequiredAccount(nextId) no final:
+//        Account contaCriada = new Account(1L, "0000000017", AccountType.CORRENTE, 10L);
+//        when(Account.<Account>findById(1L)).thenReturn(contaCriada); // Corrigido o <Account>
+//
+//        // ACT
+//        Account result = accountService.create(novaConta);
+//
+//        // ASSERT
+//        assertNotNull(result);
+//        assertEquals(1L, result.getId());
+//        assertEquals("0000000017", result.getAccountNumber());
+//        assertEquals(AccountType.CORRENTE, result.getType());
+//        assertEquals(10L, result.getCustomerId());
+//
+//        // verify
+//        verify(customerService, times(1)).findById(10L);
+//        verify(accountValidator, times(1)).calculateCheckDigit(anyString());
+//        PanacheMock.verify(Account.class, times(1)).findById(1L);
+//
+//        // Verificações do EntityManager
+//        verify(entityManager, times(1)).createNativeQuery("select nextval('account_id_seq')");
+//        verify(mockQueryNextVal, times(1)).getSingleResult();
+//        verify(entityManager, times(1)).createNativeQuery(
+//                argThat(sql -> sql.contains("INSERT INTO account"))); // Corrigido o '->'
+//        verify(mockQueryInsert, times(1)).setParameter("id", 1L);
+//        verify(mockQueryInsert, times(1)).setParameter("accountNumber", "0000000017");
+//        verify(mockQueryInsert, times(1)).setParameter("type", AccountType.CORRENTE.name());
+//        verify(mockQueryInsert, times(1)).setParameter("customerId", 10L);
+//        verify(mockQueryInsert, times(1)).executeUpdate();
+//    }
+
+
+    @Test
+    void create_devePropagarExcecao_quandoClienteNaoExiste() {
+        // ARRANGE
+        Account novaConta = new Account(null, null, AccountType.CORRENTE, 99L);
+
+        // customerService.findById lança NotFoundException
+        when(customerService.findById(99L)).thenThrow(new NotFoundException("Cliente não encontrado"));
+
+        // ACT + ASSERT
+        assertThrows(NotFoundException.class, () -> accountService.create(novaConta));
+
+        // Nesse cenário, nada de sequence, nem insert, nem findById da Account
+        verify(customerService, times(1)).findById(99L);
+        PanacheMock.verify(Account.class, never()).findById(anyLong());
+    }
+
+    @Test
+    void withdraw_deveLancarExcecao_quandoValorInvalido() {
+        // ARRANGE
+        when(findById(1L)).thenReturn(account);
+        when(currentUserService.getLoggedUser()).thenReturn(loggedUser);
+
+        doNothing().when(accountValidator).checkAccountOwnership(account, loggedUser);
+        doThrow(new IllegalArgumentException("Valor inválido"))
+                .when(accountValidator).validateAmount(BigDecimal.valueOf(-10));
+
+        // ACT + ASSERT
+        assertThrows(IllegalArgumentException.class,
+                () -> accountService.withdraw(1L, BigDecimal.valueOf(-10)));
+
+        verify(transactionService, never()).createWithdraw(any(), any());
+    }
 }
+

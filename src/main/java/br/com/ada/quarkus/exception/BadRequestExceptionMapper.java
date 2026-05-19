@@ -7,11 +7,7 @@ import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
-/**
- * Mapper responsável por tratar exceções do tipo {@link BadRequestException}.
- *
- * <p>Retorna uma resposta padronizada com status HTTP 400 e detalhes do erro.</p>
- */
+
 @Provider
 public class BadRequestExceptionMapper
         implements ExceptionMapper<BadRequestException> {

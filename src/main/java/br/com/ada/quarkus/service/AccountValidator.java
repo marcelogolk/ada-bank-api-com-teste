@@ -53,4 +53,12 @@ public class AccountValidator {
                 "Acesso negado: apenas o proprietário da conta ou um gerente pode realizar esta operação"
         );
     }
+
+    public int calculateCheckDigit(String baseNumber) {
+        int sum = 0;
+        for (char digit : baseNumber.toCharArray()) {
+            sum += digit - '0';
+        }
+        return 9 - (sum % 10);
+    }
 }

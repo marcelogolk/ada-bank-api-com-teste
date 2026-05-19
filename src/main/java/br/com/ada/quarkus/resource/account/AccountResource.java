@@ -22,23 +22,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.net.URI;
-
-/**
- * Recurso responsável pelos endpoints de contas bancárias.
- *
- * <p>Gerencia operações relacionadas a contas, incluindo:
- * criação, consulta, depósito, saque e transferência.</p>
- *
- * <p>Aplica regras de segurança baseadas em papéis:
- * <ul>
- *     <li>GERENTE: acesso completo</li>
- *     <li>CLIENTE: acesso restrito às próprias contas</li>
- * </ul>
- * </p>
- *
- * @author Marcelo
- * @version 2.0
- */
 @Path("/contas")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -59,18 +42,6 @@ public class AccountResource {
     @Inject
     TransactionResponseMapper transactionResponseMapper;
 
-    /**
-     * Cria uma nova conta bancária.
-     *
-     * <p>Apenas usuários com papel GERENTE podem criar contas.</p>
-     *
-     * <p>O número da conta é gerado automaticamente pelo sistema,
-     * incluindo o dígito verificador.</p>
-     *
-     * @param request dados da conta a ser criada.
-     * @param uriInfo informações da URI da requisição.
-     * @return resposta HTTP 201 contendo a conta criada.
-     */
     @POST
     @Transactional
     @RolesAllowed("GERENTE")
@@ -90,17 +61,6 @@ public class AccountResource {
                 .build();
     }
 
-    /**
-     * Busca uma conta pelo identificador.
-     *
-     * <p>Retorna dados completos da conta, incluindo:
-     * saldo, titular e transações recentes.</p>
-     *
-     * <p>Apenas o proprietário da conta ou um gerente podem acessar.</p>
-     *
-     * @param id identificador da conta.
-     * @return dados detalhados da conta.
-     */
     @GET
     @Path("/{id}")
     @RolesAllowed({"GERENTE", "CLIENTE"})
@@ -146,17 +106,6 @@ public class AccountResource {
         );
     }
 
-    /**
-     * Realiza um depósito em uma conta.
-     *
-     * <p>Endpoint público (não requer autenticação).</p>
-     *
-     * <p>A validação da conta e do valor é feita na camada de serviço.</p>
-     *
-     * @param id identificador da conta.
-     * @param request dados do depósito.
-     * @return dados da transação realizada.
-     */
     @POST
     @Path("/{id}/deposito")
     @Transactional
@@ -169,22 +118,6 @@ public class AccountResource {
         return transactionResponseMapper.toResponse(transaction);
     }
 
-    /**
-     * Realiza um saque em uma conta.
-     *
-     * <p>Somente o proprietário da conta ou um gerente podem realizar saques.</p>
-     *
-     * <p>Regras de negócio:
-     * <ul>
-     *     <li>Conta ELETRONICA não permite saque</li>
-     *     <li>Deve haver saldo suficiente</li>
-     * </ul>
-     * </p>
-     *
-     * @param id identificador da conta.
-     * @param request dados do saque.
-     * @return dados da transação realizada.
-     */
     @POST
     @Path("/{id}/saque")
     @Transactional
@@ -200,22 +133,6 @@ public class AccountResource {
         return transactionResponseMapper.toResponse(transaction);
     }
 
-    /**
-     * Realiza uma transferência entre contas.
-     *
-     * <p>Somente o proprietário da conta de origem ou um gerente podem transferir.</p>
-     *
-     * <p>Regras de negócio:
-     * <ul>
-     *     <li>Saldo suficiente</li>
-     *     <li>Contas não podem ser iguais</li>
-     * </ul>
-     * </p>
-     *
-     * @param id identificador da conta de origem.
-     * @param request dados da transferência.
-     * @return dados da transação realizada.
-     */
     @POST
     @Path("/{id}/transferencia")
     @Transactional
@@ -236,14 +153,6 @@ public class AccountResource {
         return transactionResponseMapper.toResponse(transaction);
     }
 
-    /**
-     * Valida se o usuário logado pode acessar a conta.
-     *
-     * <p>Gerentes têm acesso total.
-     * Clientes só podem acessar suas próprias contas.</p>
-     *
-     * @param account conta a ser validada.
-     */
     private void validateAccountOwnership(Account account) {
         LoggedUser currentUser = currentUserService.getLoggedUser();
 
@@ -258,22 +167,10 @@ public class AccountResource {
         }
     }
 
-    /**
-     * Converte entidade Account para AccountResponse.
-     *
-     * @param account entidade de conta.
-     * @return DTO de resposta.
-     */
     private AccountResponse toResponse(Account account) {
         return AccountResponse.fromEntity(account);
     }
 
-    /**
-     * Converte CreateAccountRequest para entidade Account.
-     *
-     * @param request dados recebidos na criação.
-     * @return entidade Account.
-     */
     private Account toAccount(CreateAccountRequest request) {
         Account account = new Account();
         account.setType(request.type());

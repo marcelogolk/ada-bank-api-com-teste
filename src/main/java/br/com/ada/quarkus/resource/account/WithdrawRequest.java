@@ -4,12 +4,6 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-
-/**
- * Representa os dados necessários para realizar um saque.
- *
- * @param amount valor a ser sacado.
- */
 public record WithdrawRequest(
 
         @NotNull(message = "O valor do saque é obrigatório")

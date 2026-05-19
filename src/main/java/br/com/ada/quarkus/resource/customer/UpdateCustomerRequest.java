@@ -3,17 +3,6 @@ package br.com.ada.quarkus.resource.customer;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-/**
- * Representa os dados permitidos para atualização de um cliente.
- *
- * <p>O CPF não pode ser alterado após o cadastro e, por isso,
- * não faz parte deste request.</p>
- *
- * @param name novo nome do cliente.
- * @param email novo email do cliente.
- * @param password nova senha do cliente em texto puro.
- */
 public record UpdateCustomerRequest(
 
         @NotBlank(message = "O nome do cliente é obrigatório")

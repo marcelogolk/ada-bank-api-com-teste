@@ -11,18 +11,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
-/**
- * Serviço responsável pelas operações de gerenciamento de clientes.
- *
- * <p>Centraliza as regras de negócio relacionadas a cadastro, consulta
- * e atualização de clientes, com persistência em banco de dados PostgreSQL.</p>
- *
- * <p>As senhas são protegidas com hash Argon2 no momento da criação
- * e da atualização de clientes.</p>
- *
- * @author Marcelo
- * @version 2.0
- */
+
 @ApplicationScoped
 public class CustomerService {
 
@@ -32,13 +21,6 @@ public class CustomerService {
     @Inject
     PasswordService passwordService;
 
-    /**
-     * Lista todos os clientes cadastrados com paginação, ordenados por id.
-     *
-     * @param page número da página (0-indexed).
-     * @param size quantidade de clientes por página.
-     * @return resultado paginado de clientes.
-     */
     public PageResult<Customer> list(int page, int size) {
         var query = Customer.findAll(Sort.by("id"));
         var result = query.page(Page.of(page, size));
@@ -46,24 +28,10 @@ public class CustomerService {
         return new PageResult<>(result.list(), page, size, result.count());
     }
 
-    /**
-     * Busca um cliente pelo id.
-     *
-     * @param id identificador do cliente.
-     * @return cliente encontrado.
-     * @throws NotFoundException quando o cliente não existe.
-     */
     public Customer findById(Long id) {
         return getRequiredCustomer(id);
     }
 
-    /**
-     * Busca um cliente pelo email.
-     *
-     * @param email email do cliente.
-     * @return cliente encontrado.
-     * @throws NotFoundException quando nenhum cliente é encontrado para o email informado.
-     */
     public Customer findByEmail(String email) {
         String normalizedEmail = normalizeEmail(email);
 
@@ -74,16 +42,6 @@ public class CustomerService {
                 ));
     }
 
-    /**
-     * Cadastra um novo cliente após validar unicidade de CPF e email.
-     *
-     * <p>Todo cliente criado por este fluxo nasce com papel CLIENTE
-     * e senha protegida com hash Argon2.</p>
-     *
-     * @param customer dados do cliente a ser criado.
-     * @return cliente criado e persistido no banco.
-     * @throws BadRequestException quando CPF ou email já estão em uso.
-     */
     public Customer create(Customer customer) {
         validateUniqueCpf(customer.getCpf(), null);
         validateUniqueEmail(customer.getEmail(), null);
@@ -100,20 +58,6 @@ public class CustomerService {
         return newCustomer;
     }
 
-    /**
-     * Atualiza os dados permitidos de um cliente.
-     *
-     * <p>O CPF não pode ser alterado após o cadastro.
-     * A senha é persistida com hash Argon2.</p>
-     *
-     * @param id identificador do cliente.
-     * @param name novo nome.
-     * @param email novo email.
-     * @param password nova senha.
-     * @return cliente atualizado.
-     * @throws NotFoundException quando o cliente não existe.
-     * @throws BadRequestException quando o email já está em uso por outro cliente.
-     */
     public Customer update(Long id, String name, String email, String password) {
         Customer existingCustomer = getRequiredCustomer(id);
 
@@ -126,23 +70,10 @@ public class CustomerService {
         return existingCustomer;
     }
 
-    /**
-     * Retorna o usuário logado no momento.
-     *
-     * @return usuário logado.
-     * @throws NotFoundException quando nenhum usuário está autenticado.
-     */
     public LoggedUser loggedUser() {
         return currentUserService.getLoggedUser();
     }
 
-    /**
-     * Retorna obrigatoriamente um cliente existente.
-     *
-     * @param id identificador do cliente.
-     * @return cliente encontrado.
-     * @throws NotFoundException quando o cliente não existe.
-     */
     private Customer getRequiredCustomer(Long id) {
         Customer customer = Customer.findById(id);
 
@@ -153,13 +84,6 @@ public class CustomerService {
         return customer;
     }
 
-    /**
-     * Valida se o CPF já está em uso por outro cliente.
-     *
-     * @param cpf CPF a validar.
-     * @param currentId id do cliente atual em atualização, ou null em criação.
-     * @throws BadRequestException quando o CPF já está cadastrado.
-     */
     private void validateUniqueCpf(String cpf, Long currentId) {
         Customer existingCustomer = Customer.find("cpf", cpf).firstResult();
 
@@ -168,13 +92,6 @@ public class CustomerService {
         }
     }
 
-    /**
-     * Valida se o email já está em uso por outro cliente.
-     *
-     * @param email email a validar.
-     * @param currentId id do cliente atual em atualização, ou null em criação.
-     * @throws BadRequestException quando o email já está cadastrado.
-     */
     private void validateUniqueEmail(String email, Long currentId) {
         String normalizedEmail = normalizeEmail(email);
         Customer existingCustomer = Customer.find("email", normalizedEmail).firstResult();
@@ -184,12 +101,6 @@ public class CustomerService {
         }
     }
 
-    /**
-     * Normaliza o email para comparação e armazenamento.
-     *
-     * @param email email informado.
-     * @return email normalizado.
-     */
     private String normalizeEmail(String email) {
         if (email == null) {
             return null;

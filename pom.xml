@@ -23,6 +23,9 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- BOM (Bill of Materials) do Quarkus — centraliza e alinha as versões
+                 de todas as extensões Quarkus, eliminando a necessidade de declarar
+                 versão individualmente em cada dependência Quarkus abaixo -->
             <dependency>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -34,75 +37,168 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- REST API -->
+
+        <!-- ===== CAMADA WEB / REST ===== -->
+
+        <!-- Suporte a endpoints REST com Jakarta REST (JAX-RS).
+             Substitui o quarkus-resteasy na stack moderna do Quarkus 3.x -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
         </dependency>
 
-        <!-- JSON -->
+        <!-- Serialização e desserialização automática de JSON usando Jackson.
+             Converte objetos Java para JSON nas respostas e JSON para objetos
+             nos corpos das requisições (ex.: CreateCustomerRequest, AccountResponse) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
-        <!-- CDI -->
+        <!-- ===== CDI / INJEÇÃO DE DEPENDÊNCIA ===== -->
+
+        <!-- Contêiner CDI do Quarkus (ArC).
+             Viabiliza @ApplicationScoped, @Inject e todo o ciclo de vida
+             dos beans gerenciados nos Services e Resources -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
-        <!-- Validation -->
+        <!-- ===== VALIDAÇÃO ===== -->
+
+        <!-- Integração com Hibernate Validator (Bean Validation 3.x).
+             Processa as anotações @NotNull, @NotBlank, @Size, @Email, @Pattern
+             presentes nos DTOs de requisição (CreateCustomerRequest, DepositRequest, etc.) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
 
-        <!-- Persistence -->
+        <!-- ===== PERSISTÊNCIA ===== -->
+
+        <!-- Hibernate ORM com o padrão Active Record do Panache.
+             Fornece PanacheEntityBase, os métodos findById(), persist(), find(),
+             findAll() e o suporte a paginação (Page, Sort) usados em Account,
+             Customer e Transaction -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-panache</artifactId>
         </dependency>
 
-        <!-- PostgreSQL -->
+        <!-- Driver JDBC para PostgreSQL.
+             Necessário para a conexão com o banco de dados configurado
+             no docker-compose (ada_bank_api, usuário ada.tech) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
 
-        <!-- JWT Security -->
+        <!-- ===== SEGURANÇA / JWT ===== -->
+
+        <!-- Suporte a validação e leitura de tokens JWT via MicroProfile JWT.
+             Habilita @RolesAllowed, JsonWebToken e a leitura de claims
+             customizados (userId, cpf, grupos) no AuthService -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-jwt</artifactId>
         </dependency>
 
+        <!-- Suporte à geração (build) de tokens JWT.
+             Fornece a API fluente Jwt.issuer(...).sign() usada em AuthService
+             para criar o token de autenticação no endpoint de login -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-jwt-build</artifactId>
         </dependency>
 
-        <!-- Argon2 para hash de senhas -->
+        <!-- ===== HASH DE SENHAS ===== -->
+
+        <!-- Biblioteca Argon2 para hashing seguro de senhas (algoritmo Argon2id).
+             Utilizada no PasswordService para proteger as senhas dos clientes
+             antes de persistir no banco e para verificar no processo de login.
+             Versão declarada explicitamente pois não faz parte do BOM do Quarkus -->
         <dependency>
             <groupId>de.mkammerer</groupId>
             <artifactId>argon2-jvm</artifactId>
             <version>2.11</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jacoco</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-        <!-- Tests -->
+        <!-- ===== TESTES ===== -->
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5-mockito</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Framework de testes do Quarkus baseado em JUnit 5.
+             Fornece @QuarkusTest, @QuarkusIntegrationTest e gerencia o ciclo
+             de vida da aplicação durante os testes de integração -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- RestAssured — biblioteca para testes de API REST de forma fluente.
+             Utilizada nos testes de integração para disparar requisições HTTP
+             e fazer asserções sobre status code, headers e body da resposta.
+             Versão gerenciada pelo BOM do Quarkus -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Mockito Core — framework de mocks para testes unitários.
+             Fornece @Mock, @InjectMocks, when().thenReturn(), verify() e assertThrows()
+             usados nos testes unitários dos Services sem subir o container Quarkus -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito JUnit Jupiter — integração do Mockito com JUnit 5.
+             Fornece @ExtendWith(MockitoExtension.class) que inicializa automaticamente
+             os @Mock e @InjectMocks sem precisar chamar MockitoAnnotations.openMocks() -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Suporte a mock dos métodos estáticos do Panache (findById, find, findAll, persist).
+             Permite testar Services que usam Active Record sem precisar de banco de dados -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-panache-mock</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+
+            <!-- Plugin principal do Quarkus para Maven.
+                 Responsável pelos goals quarkus:dev (modo desenvolvimento com live reload),
+                 quarkus:build (empacotamento) e pela orquestração do ciclo de build
+                 específico do Quarkus -->
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
@@ -110,6 +206,10 @@
                 <extensions>true</extensions>
             </plugin>
 
+            <!-- Plugin de compilação Java.
+                 O parâmetro <parameters>true</parameters> preserva os nomes dos
+                 parâmetros de métodos no bytecode — necessário para que o Quarkus
+                 resolva corretamente @PathParam, @QueryParam e injeções CDI -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler-plugin.version}</version>
@@ -118,11 +218,15 @@
                 </configuration>
             </plugin>
 
+            <!-- Plugin de testes unitários (Surefire).
+                 Executa as classes de teste durante a fase 'test' do ciclo Maven.
+                 O @{argLine} é um placeholder preenchido pelo JaCoCo em tempo de build
+                 para injetar o agente de instrumentação de cobertura -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine}</argLine>
+                    <argLine>@{argLine} --enable-native-access=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
@@ -130,6 +234,10 @@
                 </configuration>
             </plugin>
 
+            <!-- Plugin de testes de integração (Failsafe).
+                 Executa testes cujo nome termina em IT ou que estão anotados com
+                 @QuarkusIntegrationTest. Separado do Surefire para garantir que
+                 falhas em testes de integração não impeçam o relatório de cobertura -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
@@ -150,10 +258,92 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
+            <!-- Plugin JaCoCo — coleta e verifica a cobertura de testes.
+                 Instrumenta o bytecode antes dos testes e gera relatório HTML
+                 acessível em target/site/jacoco/index.html após o build -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.14</version>
+                <configuration>
+                    <!-- Classes excluídas da contagem de cobertura.
+                         Modelos, DTOs e mappers de exceção não contêm lógica
+                         de negócio testável e seriam ruído no relatório -->
+                    <excludes>
+                        <exclude>**/model/**</exclude>
+                        <exclude>**/exception/**</exclude>
+                        <exclude>**/resource/**/*Request.class</exclude>
+                        <exclude>**/resource/**/*Response.class</exclude>
+                        <exclude>**/resource/**/Link.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                     <!-- Fase 1: injeta o agente JaCoCo antes dos testes.
+                         Preenche a propriedade @{argLine} consumida pelo Surefire
+                         e pelo Failsafe para instrumentar os bytecodes em tempo de execução -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <!-- Fase 2: gera o relatório de cobertura após a fase verify.
+                         No Quarkus o arquivo jacoco.exec só fica completo após 'verify',
+                         por isso usamos essa fase em vez de 'test'.
+                         Produz o relatório HTML em target/site/jacoco/index.html -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Garante o diretório de saída mesmo em builds Quarkus -->
+                            <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Fase 3: verifica se a meta mínima de cobertura foi atingida.
+                         Metas definidas em 0% temporariamente para validar que o
+                         build funciona — serão elevadas para 70% linha / 60% branch
+                         conforme os testes forem sendo escritos -->
+                    <execution>
+                        <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <!-- Meta de cobertura de linha: 0% (provisório) -->
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.00</minimum>
+                                        </limit>
+                                        <!-- Meta de cobertura de branch: 0% (provisório) -->
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.00</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
     <profiles>
+
+        <!-- Perfil para compilação nativa com GraalVM.
+             Ativado passando -Dnative na linha de comando (ex.: ./mvnw package -Dnative).
+             Desativa o JAR padrão, habilita o executável nativo e libera os testes
+             de integração nativos (skipITs=false) -->
         <profile>
             <id>native</id>
             <activation>
@@ -167,5 +357,7 @@
                 <quarkus.native.enabled>true</quarkus.native.enabled>
             </properties>
         </profile>
+
     </profiles>
+
 </project>

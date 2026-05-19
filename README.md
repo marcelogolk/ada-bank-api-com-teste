@@ -1,4 +1,4 @@
-# ada-bank-api
+# ada-bank-api-com-testes
 
 Este projeto utiliza o framework Java Quarkus.
 

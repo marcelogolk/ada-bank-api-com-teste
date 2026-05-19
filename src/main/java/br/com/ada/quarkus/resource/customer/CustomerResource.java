@@ -17,27 +17,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
 import java.net.URI;
-
-/**
- * Recurso responsável pelos endpoints de clientes.
- *
- * <p>Permite operações de:
- * <ul>
- *     <li>Cadastro de clientes (signup)</li>
- *     <li>Consulta de clientes</li>
- *     <li>Atualização de dados</li>
- * </ul>
- *
- * <p>Regras de segurança:
- * <ul>
- *     <li>GERENTE: acesso completo</li>
- *     <li>CLIENTE: acesso apenas aos próprios dados</li>
- * </ul>
- * </p>
- *
- * @author Marcelo
- * @version 2.0
- */
 @Path("/clientes")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -51,15 +30,6 @@ public class CustomerResource {
     @Inject
     CurrentUserService currentUserService;
 
-    /**
-     * Lista clientes com paginação.
-     *
-     * <p>Apenas gerentes podem acessar este endpoint.</p>
-     *
-     * @param page número da página (inicia em 0).
-     * @param size quantidade de registros por página.
-     * @return lista paginada de clientes.
-     */
     @GET
     @RolesAllowed("GERENTE")
     public PageResponse<CustomerResponse> list(
@@ -74,15 +44,6 @@ public class CustomerResource {
         );
     }
 
-    /**
-     * Busca um cliente pelo ID.
-     *
-     * <p>Gerentes podem acessar qualquer cliente.
-     * Clientes só podem acessar a si mesmos.</p>
-     *
-     * @param id identificador do cliente.
-     * @return dados públicos do cliente.
-     */
     @GET
     @Path("/{id}")
     @RolesAllowed({"GERENTE", "CLIENTE"})
@@ -97,15 +58,6 @@ public class CustomerResource {
         return toResponse(customerService.findById(id));
     }
 
-    /**
-     * Cria um novo cliente (cadastro).
-     *
-     * <p>Endpoint público que não requer autenticação.</p>
-     *
-     * @param request dados do cliente.
-     * @param uriInfo informações da URI.
-     * @return resposta HTTP 201 com o cliente criado.
-     */
     @POST
     @Transactional
     @PermitAll
@@ -125,16 +77,6 @@ public class CustomerResource {
                 .build();
     }
 
-    /**
-     * Atualiza os dados de um cliente.
-     *
-     * <p>Gerentes podem atualizar qualquer cliente.
-     * Clientes só podem atualizar seus próprios dados.</p>
-     *
-     * @param id identificador do cliente.
-     * @param request novos dados.
-     * @return cliente atualizado.
-     */
     @PUT
     @Path("/{id}")
     @Transactional
@@ -159,11 +101,6 @@ public class CustomerResource {
         return toResponse(updatedCustomer);
     }
 
-    /**
-     * Valida se o usuário logado é o próprio cliente ou um gerente.
-     *
-     * @param customerId ID do cliente.
-     */
     private void validateOwnershipOrManager(Long customerId) {
         LoggedUser currentUser = currentUserService.getLoggedUser();
 
@@ -178,9 +115,6 @@ public class CustomerResource {
         }
     }
 
-    /**
-     * Valida parâmetros de paginação.
-     */
     private void validatePagination(int page, int size) {
         if (page < 0) {
             throw new BadRequestException("page deve ser >= 0");
@@ -191,9 +125,6 @@ public class CustomerResource {
         }
     }
 
-    /**
-     * Converte entidade Customer em DTO.
-     */
     private CustomerResponse toResponse(Customer customer) {
         return new CustomerResponse(
                 customer.getId(),
@@ -202,9 +133,6 @@ public class CustomerResource {
         );
     }
 
-    /**
-     * Converte request em entidade Customer.
-     */
     private Customer toCustomer(CreateCustomerRequest request) {
         return new Customer(
                 null,
