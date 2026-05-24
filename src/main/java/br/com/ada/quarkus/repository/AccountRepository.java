@@ -1,30 +1,43 @@
 package br.com.ada.quarkus.repository;
 
 import br.com.ada.quarkus.model.Account;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase; // Use PanacheRepositoryBase
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
-import io.quarkus.hibernate.orm.panache.PanacheQuery; // Importar PanacheQuery
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 
 import java.util.Optional;
 
-/**
- * Interface de repositório para a entidade Account.
- * Estende PanacheRepositoryBase para herdar métodos de persistência do Panache.
- * Anotada com @ApplicationScoped para que o CDI possa gerenciá-la e injetá-la.
- */
 @ApplicationScoped
-public interface AccountRepository extends PanacheRepositoryBase<Account, Long> {
+public class AccountRepository implements PanacheRepositoryBase<Account, Long> { // Implemente PanacheRepositoryBase com 2 argumentos
+    // O método findByCustomerId que você tinha antes pode ser mantido,
+    // mas não é um método padrão de PanacheRepositoryBase, então se você
+    // quiser que ele funcione, ele precisa ser implementado aqui.
+    // No entanto, para o erro atual, o foco é a assinatura da interface.
 
-    /**
-     * Encontra contas por customerId.
-     * Este método é um exemplo de como adicionar métodos personalizados ao repositório.
-     * Panache já fornece find("field", value), mas aqui demonstramos a flexibilidade.
-     *
-     * @param customerId O ID do cliente.
-     * @return Uma PanacheQuery para contas associadas ao customerId.
-     */
-    default PanacheQuery<Account> findByCustomerId(Long customerId) {
+    // Se você quer um método customizado, ele ficaria assim:
+    public PanacheQuery<Account> findByCustomerId(Long customerId) {
         return find("customerId", customerId);
     }
+
+    // Se você estava usando findByIdOptional ou findAll diretamente no AccountService,
+    // eles já são fornecidos por PanacheRepositoryBase.
 }
+
+//package br.com.ada.quarkus.repository;
+//
+//import br.com.ada.quarkus.model.Account;
+//import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+//import io.quarkus.panache.common.Sort;
+//import jakarta.enterprise.context.ApplicationScoped;
+//import io.quarkus.hibernate.orm.panache.PanacheQuery;
+//
+//import java.util.Optional;
+//
+//@ApplicationScoped
+//public interface AccountRepository extends PanacheRepositoryBase<Account, Long> {
+//
+//    default PanacheQuery<Account> findByCustomerId(Long customerId) {
+//        return find("customerId", customerId);
+//    }
+//}

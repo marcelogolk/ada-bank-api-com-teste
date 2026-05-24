@@ -3,7 +3,7 @@ package unitario;
 import br.com.ada.quarkus.model.Account;
 import br.com.ada.quarkus.model.AccountType;
 import br.com.ada.quarkus.model.LoggedUser;
-import br.com.ada.quarkus.service.AccountValidator;
+import br.com.ada.quarkus.validator.AccountValidator;
 import io.quarkus.security.ForbiddenException;
 import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.Test;

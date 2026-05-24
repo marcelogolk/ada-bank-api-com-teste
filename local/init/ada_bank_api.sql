@@ -361,7 +361,25 @@ VALUES
     ('SAQUE', 346.00, NOW() - INTERVAL '248 minute', 4, NULL),
     ('SAQUE', 380.00, NOW() - INTERVAL '250 minute', 7, NULL),
     ('DEPOSITO', 397.00, NOW() - INTERVAL '251 minute', NULL, 1),
-    ('SAQUE', 414.00, NOW() - INTERVAL '252 minute', 2, NULL),
+    ('SAQUE', INSERT INTO bank_transaction (type, amount, date_time, source_account_id, destination_account_id)
+VALUES
+    -- Depósitos iniciais
+    ('DEPOSITO', 1500.00, NOW() - INTERVAL '10 day', NULL, 1),
+    ('DEPOSITO', 800.00, NOW() - INTERVAL '9 day', NULL, 2),
+    ('DEPOSITO', 1450.00, NOW() - INTERVAL '8 day', NULL, 4),
+    ('DEPOSITO', 900.00, NOW() - INTERVAL '7 day', NULL, 5),
+    ('DEPOSITO', 700.00, NOW() - INTERVAL '6 day', NULL, 7),
+    ('DEPOSITO', 300.00, NOW() - INTERVAL '5 day', NULL, 8),
+    -- Saques iniciais
+    ('SAQUE', 120.00, NOW() - INTERVAL '4 day', 1, NULL),
+    ('SAQUE', 80.00, NOW() - INTERVAL '3 day', 2, NULL),
+    ('SAQUE', 60.00, NOW() - INTERVAL '2 day', 4, NULL),
+    ('SAQUE', 150.00, NOW() - INTERVAL '1 day', 5, NULL),
+    -- Transferências (valor positivo, de conta_origem → conta_destino)
+    ('TRANSFERENCIA', 200.00, NOW() - INTERVAL '20 hour', 1, 2),
+    ('TRANSFERENCIA', 90.00, NOW() - INTERVAL '18 hour', 2, 3),
+    ('TRANSFERENCIA', 110.00, NOW() - INTERVAL '16 hour', 3, 4),
+   414.00, NOW() - INTERVAL '252 minute', 2, NULL),
     ('DEPOSITO', 431.00, NOW() - INTERVAL '253 minute', NULL, 4),
     ('DEPOSITO', 465.00, NOW() - INTERVAL '255 minute', NULL, 7),
     ('SAQUE', 482.00, NOW() - INTERVAL '256 minute', 1, NULL),

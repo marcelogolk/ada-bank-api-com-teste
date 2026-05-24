@@ -1,7 +1,7 @@
 package br.com.ada.quarkus.resource;
 
 import java.util.List;
-import br.com.ada.quarkus.model.PageResult;
+import br.com.ada.quarkus.util.PageResult;
 import java.util.function.Function;
 
 public record PageResponse<T>(

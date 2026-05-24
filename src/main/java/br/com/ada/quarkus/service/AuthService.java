@@ -41,6 +41,7 @@ public class AuthService implements CurrentUserService {
                 getRole()
         );
     }
+
     private Long getUserId() {
         return Long.parseLong(jwt.getClaim("userId").toString());
     }

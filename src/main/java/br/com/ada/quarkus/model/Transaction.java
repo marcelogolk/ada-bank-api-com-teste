@@ -122,4 +122,5 @@ public class Transaction extends PanacheEntityBase {
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }

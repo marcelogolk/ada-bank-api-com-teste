@@ -1,10 +1,12 @@
-package br.com.ada.quarkus.service;
+package br.com.ada.quarkus.validator;
 
 import br.com.ada.quarkus.model.Account;
 import br.com.ada.quarkus.model.AccountType;
 import br.com.ada.quarkus.model.LoggedUser;
+import br.com.ada.quarkus.service.CurrentUserService;
 import io.quarkus.security.ForbiddenException;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 
 import java.math.BigDecimal;
@@ -12,11 +14,16 @@ import java.math.BigDecimal;
 @ApplicationScoped
 public class AccountValidator {
 
-    public void validateAmount(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+@Inject
+CurrentUserService currentUserService;
+
+
+
+public void validateAmount(BigDecimal amount) {
+    if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("O valor da operação deve ser maior que zero");
-        }
     }
+}
 
     public void validateDifferentAccounts(Long sourceAccountId, Long destinationAccountId) {
         if (sourceAccountId.equals(destinationAccountId)) {

@@ -2,15 +2,15 @@ package br.com.ada.quarkus.service;
 
 import br.com.ada.quarkus.model.Customer;
 import br.com.ada.quarkus.model.LoggedUser;
-import br.com.ada.quarkus.model.PageResult;
 import br.com.ada.quarkus.model.UserRole;
-import io.quarkus.panache.common.Page;
+import br.com.ada.quarkus.repository.CustomerRepository;
+import br.com.ada.quarkus.util.PageResult;
+import br.com.ada.quarkus.validator.CustomerValidator;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
-
 
 @ApplicationScoped
 public class CustomerService {
@@ -21,30 +21,39 @@ public class CustomerService {
     @Inject
     PasswordService passwordService;
 
+    @Inject
+    CustomerRepository customerRepository; // Novo: Injeta o CustomerRepository
+
+    @Inject
+    CustomerValidator customerValidator; // Novo: Injeta o CustomerValidator
+
+    @Transactional
     public PageResult<Customer> list(int page, int size) {
-        var query = Customer.findAll(Sort.by("id"));
-        var result = query.page(Page.of(page, size));
+        var query = customerRepository.findAllCustomers(Sort.by("id"));
+        var result = query.page(io.quarkus.panache.common.Page.of(page, size));
 
         return new PageResult<>(result.list(), page, size, result.count());
     }
 
+    @Transactional
     public Customer findById(Long id) {
         return getRequiredCustomer(id);
     }
 
+    @Transactional
     public Customer findByEmail(String email) {
         String normalizedEmail = normalizeEmail(email);
 
-        return (Customer) Customer.find("email", normalizedEmail)
-                .firstResultOptional()
+        return customerRepository.findByEmailOptional(normalizedEmail)
                 .orElseThrow(() -> new NotFoundException(
                         "Cliente com o email informado não foi encontrado"
                 ));
     }
 
+    @Transactional
     public Customer create(Customer customer) {
-        validateUniqueCpf(customer.getCpf(), null);
-        validateUniqueEmail(customer.getEmail(), null);
+        customerValidator.validateUniqueCpf(customer.getCpf(), null);
+        customerValidator.validateUniqueEmail(customer.getEmail(), null);
 
         Customer newCustomer = new Customer();
         newCustomer.setName(customer.getName());
@@ -53,19 +62,22 @@ public class CustomerService {
         newCustomer.setPassword(passwordService.hash(customer.getPassword()));
         newCustomer.setRole(UserRole.CUSTOMER);
 
-        newCustomer.persist();
+        customerRepository.persist(newCustomer); // Usa o repositório para persistir
 
         return newCustomer;
     }
 
+    @Transactional
     public Customer update(Long id, String name, String email, String password) {
         Customer existingCustomer = getRequiredCustomer(id);
 
-        validateUniqueEmail(email, id);
+        customerValidator.validateUniqueEmail(email, id); // Usa o validador
 
         existingCustomer.setName(name);
         existingCustomer.setEmail(normalizeEmail(email));
         existingCustomer.setPassword(passwordService.hash(password));
+
+        customerRepository.persist(existingCustomer); // PanacheEntityBase.persist() ou customerRepository.persist()
 
         return existingCustomer;
     }
@@ -75,37 +87,14 @@ public class CustomerService {
     }
 
     private Customer getRequiredCustomer(Long id) {
-        Customer customer = Customer.findById(id);
-
-        if (customer == null) {
-            throw new NotFoundException("Cliente não encontrado");
-        }
-
-        return customer;
-    }
-
-    private void validateUniqueCpf(String cpf, Long currentId) {
-        Customer existingCustomer = Customer.find("cpf", cpf).firstResult();
-
-        if (existingCustomer != null && !existingCustomer.getId().equals(currentId)) {
-            throw new BadRequestException("Já existe um cliente com o CPF informado");
-        }
-    }
-
-    private void validateUniqueEmail(String email, Long currentId) {
-        String normalizedEmail = normalizeEmail(email);
-        Customer existingCustomer = Customer.find("email", normalizedEmail).firstResult();
-
-        if (existingCustomer != null && !existingCustomer.getId().equals(currentId)) {
-            throw new BadRequestException("Já existe um cliente com o email informado");
-        }
+        return customerRepository.findByIdOptional(id)
+                .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
     }
 
     private String normalizeEmail(String email) {
         if (email == null) {
             return null;
         }
-
         return email.trim().toLowerCase();
     }
 }

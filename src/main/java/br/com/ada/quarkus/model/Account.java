@@ -9,15 +9,10 @@ import org.hibernate.annotations.Formula;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-
 @Entity
 @Table(name = "account")
 public class Account extends PanacheEntityBase {
 
-    /**
-     * Identificador único da conta no sistema.
-     * Gerado automaticamente por sequence do PostgreSQL.
-     */
     @Id
     @SequenceGenerator(
             name = "account_seq",
@@ -27,7 +22,7 @@ public class Account extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
     private Long id;
 
-     @Pattern(
+    @Pattern(
             regexp = "\\d{10}",
             message = "O número da conta deve conter exatamente 10 dígitos (9 base + 1 verificador)"
     )
@@ -97,16 +92,6 @@ public class Account extends PanacheEntityBase {
 
     public BigDecimal getBalance() {
         return balance;
-    }
-
-    public int calculateCheckDigit() {
-        int sum = 0;
-
-        for (char c : accountNumber.toCharArray()) {
-            sum += c - '0';
-        }
-
-        return 9 - (sum % 10);
     }
 
     @Override

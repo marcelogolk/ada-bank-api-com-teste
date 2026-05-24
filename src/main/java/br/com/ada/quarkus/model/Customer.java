@@ -133,4 +133,5 @@ public class Customer extends PanacheEntityBase {
     public int hashCode() {
         return Objects.hash(id, cpf);
     }
+
 }
